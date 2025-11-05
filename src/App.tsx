@@ -1,57 +1,52 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import cloudflareLogo from './assets/Cloudflare_Logo.svg'
-import './App.css'
+import type { FormEvent } from 'react'
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [name, setName] = useState('unknown')
+  const [guess, setGuess] = useState('')
+  const [result, setResult] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const trimmed = guess.trim()
+    if (!trimmed) return
+    setSubmitting(true)
+    setResult(null)
+    try {
+      const res = await fetch(`/guess?q=${encodeURIComponent(trimmed)}`)
+      const text = await res.text()
+      setResult(text)
+    } catch {
+      setResult('error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
-    <>
-      <div>
-        <a href='https://vite.dev' target='_blank'>
-          <img src={viteLogo} className='logo' alt='Vite logo' />
-        </a>
-        <a href='https://react.dev' target='_blank'>
-          <img src={reactLogo} className='logo react' alt='React logo' />
-        </a>
-        <a href='https://workers.cloudflare.com/' target='_blank'>
-          <img src={cloudflareLogo} className='logo cloudflare' alt='Cloudflare logo' />
-        </a>
+    <div className='min-h-dvh grid place-items-center px-4'>
+      <div className='w-full max-w-3xl'>
+        <h1 className='text-4xl font-semibold text-center mb-6'>Guess the word</h1>
+        <form onSubmit={onSubmit} className='flex flex-col sm:flex-row gap-3'>
+          <input
+            className='w-full text-2xl px-5 py-4 rounded-lg bg-zinc-900 border border-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+            type='text'
+            placeholder='Type your guess...'
+            value={guess}
+            onChange={(e) => setGuess(e.target.value)}
+            aria-label='Guess input'
+          />
+          <button className='shrink-0 text-lg px-5 py-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50' type='submit' disabled={submitting} aria-label='Submit guess'>
+            {submitting ? 'Submitting…' : 'Submit'}
+          </button>
+        </form>
+        {result !== null && (
+          <div className='mt-4 text-lg text-center' aria-live='polite'>
+            {result}
+          </div>
+        )}
       </div>
-      <h1>Vite + React + Cloudflare</h1>
-      <div className='card'>
-        <button
-          onClick={() => setCount((count) => count + 1)}
-          aria-label='increment'
-        >
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <div className='card'>
-        <button
-          onClick={() => {
-            fetch('/api/')
-              .then((res) => res.json() as Promise<{ name: string }>)
-              .then((data) => setName(data.name))
-          }}
-          aria-label='get name'
-        >
-          Name from API is: {name}
-        </button>
-        <p>
-          Edit <code>worker/index.ts</code> to change the name
-        </p>
-      </div>
-      <p className='read-the-docs'>
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
