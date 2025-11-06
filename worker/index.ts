@@ -12,22 +12,22 @@ export default {
 
       if (text) {
         if (text === secret) {
-          return new Response("🎉", { headers: { "content-type": "text/plain" } });
+          return new Response(JSON.stringify({ score: 100 }), { headers: { "content-type": "application/json" } });
         }
 
         const [secretEmbedding, guessEmbedding] = await env.VECTORIZE.getByIds([secret, text]);
 
         if (!guessEmbedding) {
-          return new Response("Unknown word", { status: 404, headers: { "content-type": "text/plain" } });
+          return new Response(JSON.stringify({ error: "Unknown word" }), { status: 404, headers: { "content-type": "application/json" } });
         }
 
         const sim = similarity.cosine(guessEmbedding.values, secretEmbedding.values);
         const score = Math.round(sim * 100);
 
-        return new Response(`${score}%`, { headers: { "content-type": "text/plain" } });
+        return new Response(JSON.stringify({ score }), { headers: { "content-type": "application/json" } });
       }
 
-      return new Response("0", { headers: { "content-type": "text/plain" } });
+      return new Response(JSON.stringify({ score: 0 }), { headers: { "content-type": "application/json" } });
     }
 
 		return new Response(null, { status: 404 });
