@@ -3,7 +3,7 @@ import { similarity } from "ml-distance";
 
 export default {
   async fetch(request) {
-    const secret = 'god';
+    const secret = 'japan';
 
     const url = new URL(request.url);
 

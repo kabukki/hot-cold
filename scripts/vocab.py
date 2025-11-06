@@ -1,10 +1,10 @@
 import json, sys
 from wordfreq import iter_wordlist
-from gensim.models import KeyedVectors
+import gensim.downloader as api
 import numpy as np
 
 def main():
-    model = KeyedVectors.load_word2vec_format("GoogleNews-vectors-negative300.bin", binary=True)
+    model = api.load('glove-wiki-gigaword-300')
     out = open("vectors.jsonl", "w", encoding="utf-8")
     kept = 0
     missed = 0
