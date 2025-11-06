@@ -53,7 +53,7 @@ function App() {
   return (
     <div className='min-h-dvh grid place-items-center px-4'>
       <div className='w-full max-w-3xl'>
-        <h1 className='text-4xl font-semibold text-center mb-6'>Guess the word</h1>
+        <h1 className='text-4xl font-semibold text-center mb-6'>Guess the secret word</h1>
         <form onSubmit={onSubmit} className='flex flex-col sm:flex-row gap-3'>
           <input
             className='w-full text-2xl px-5 py-4 rounded-lg bg-zinc-900 border border-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500'

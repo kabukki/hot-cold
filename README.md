@@ -1,10 +1,16 @@
 # Hot & Cold
 
-## Words
+## Credits
+
+Inspired from
+- https://semantle.com/
+- https://cemantix.certitudes.org/
+
+### Words
 
 https://github.com/rspeer/wordfreq
 
-## Models
+### Models
 
 https://code.google.com/archive/p/word2vec/
 
