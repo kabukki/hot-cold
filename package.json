@@ -13,7 +13,8 @@
 	"dependencies": {
 		"ml-distance": "^4.0.1",
 		"react": "^19.1.1",
-		"react-dom": "^19.1.1"
+		"react-dom": "^19.1.1",
+		"word2vec": "^1.1.5"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.13.19",

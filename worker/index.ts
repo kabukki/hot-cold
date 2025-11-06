@@ -1,48 +1,6 @@
 import { env } from "cloudflare:workers";
 import { similarity } from "ml-distance";
 
-async function getEmbedding(text: string) {
-  const [vector] = await env.VECTORIZE.getByIds([text]);
-
-  if (vector) {
-    return vector.values;
-  } else {
-    const { data: [values] } = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text }) as any;
-    await env.VECTORIZE.upsert([
-      { id: text, values },
-    ]);
-    return values;
-  }
-}
-
-/**
- * Map cosine similarity -> 0..100 with exact caps:
- *  - sim <= minSim  => 0
- *  - sim >= maxSim  => 100
- * Tunables:
- *  - minSim: bruit de fond (≈ 0.20–0.35 selon ton modèle)
- *  - maxSim: “vraiment très proche” (≈ 0.85–0.95)
- *  - gamma: courbure (>1 = plus exigeant)
- */
-function similarityToScore(
-  sim: number,
-  { minSim = 0.5, maxSim = 1, gamma = 0.5, smooth = true } = {}
-) {
-  console.log('sim', sim);
-  // 1) normaliser dans [0..1] en pinçant la plage utile
-  let t = (sim - minSim) / (maxSim - minSim);
-  t = Math.max(0, Math.min(1, t));           // clamp
-
-  // 2) (optionnel) lisser pour une montée plus “organique”
-  if (smooth) t = t * t * (3 - 2 * t);        // smoothstep
-
-  // 3) accentuer ou adoucir la courbe
-  t = Math.pow(t, gamma);
-
-  // 4) 0..100 avec garantie : sim>=maxSim => 100 ; sim<=minSim => 0
-  return Math.round(t * 100);
-}
-
 export default {
   async fetch(request) {
     const secret = 'car';
@@ -53,8 +11,20 @@ export default {
       const text = url.searchParams.get("q") ?? "";
 
       if (text) {
-        const [guessEmbedding, secretEmbedding] = await Promise.all([getEmbedding(text), getEmbedding(secret)]);
-        const score = similarityToScore(similarity.cosine(guessEmbedding, secretEmbedding));
+        const [guessEmbedding] = await env.VECTORIZE.getByIds([text]);
+
+        if (!guessEmbedding) {
+          return new Response("-1", { status: 404, headers: { "content-type": "text/plain" } });
+        }
+
+        const [secretEmbedding] = await env.VECTORIZE.getByIds([secret]);
+
+        const sim = similarity.cosine(guessEmbedding.values, secretEmbedding.values);
+        const score = Math.round(sim * 100);
+
+        // Debug
+        const top = await env.VECTORIZE.query(secretEmbedding.values, { topK: 10 });
+        console.log('top', top);
 
         return new Response(score.toString(), { headers: { "content-type": "text/plain" } });
       }
