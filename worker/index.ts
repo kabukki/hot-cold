@@ -3,7 +3,7 @@ import { similarity } from "ml-distance";
 
 export default {
   async fetch(request) {
-    const secret = 'car';
+    const secret = 'god';
 
     const url = new URL(request.url);
 
@@ -11,22 +11,20 @@ export default {
       const text = url.searchParams.get("q") ?? "";
 
       if (text) {
-        const [guessEmbedding] = await env.VECTORIZE.getByIds([text]);
-
-        if (!guessEmbedding) {
-          return new Response("-1", { status: 404, headers: { "content-type": "text/plain" } });
+        if (text === secret) {
+          return new Response("🎉", { headers: { "content-type": "text/plain" } });
         }
 
-        const [secretEmbedding] = await env.VECTORIZE.getByIds([secret]);
+        const [secretEmbedding, guessEmbedding] = await env.VECTORIZE.getByIds([secret, text]);
+
+        if (!guessEmbedding) {
+          return new Response("Unknown word", { status: 404, headers: { "content-type": "text/plain" } });
+        }
 
         const sim = similarity.cosine(guessEmbedding.values, secretEmbedding.values);
         const score = Math.round(sim * 100);
 
-        // Debug
-        const top = await env.VECTORIZE.query(secretEmbedding.values, { topK: 10 });
-        console.log('top', top);
-
-        return new Response(score.toString(), { headers: { "content-type": "text/plain" } });
+        return new Response(`${score}%`, { headers: { "content-type": "text/plain" } });
       }
 
       return new Response("0", { headers: { "content-type": "text/plain" } });
